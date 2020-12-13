@@ -10,6 +10,12 @@ public class CharacterMove : MonoBehaviour
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private bool isJumping = false;
     [SerializeField] private bool canUsePortal = false;
+
+    [SerializeField]private Rigidbody2D collidingBoxRb;
+    [SerializeField] private int boxDirection = 0; //현재 충돌중인 박스가 어느 방향에 있는가? -1 왼쪽, 0 없음, 1 오른쪽
+    private bool isHoldingBox = false;
+
+    private float moveDirection = 0;
     private bool isDead = false;
     public float moveSpeed;
     public float jumpSpeed;
@@ -26,37 +32,47 @@ public class CharacterMove : MonoBehaviour
     {
         if (!isDead)
         {
-            float speed = 0;
+            moveDirection = 0;
 
             if (Input.GetKey(KeyCode.LeftArrow))
-            {
-                speed += -1f;
+            { 
+                moveDirection += -1f;
             }
             if (Input.GetKey(KeyCode.RightArrow))
             {
-                speed += 1f;
+                moveDirection += 1f;
             }
-            if (Input.GetKeyDown(KeyCode.UpArrow))
+
+            if(!isHoldingBox && Input.GetKey(KeyCode.LeftShift))
+            {
+                RaycastBox();
+            }
+            if(Input.GetKeyUp(KeyCode.LeftShift) || moveDirection == boxDirection)
+            {
+                UnlinkToBox();
+            }
+
+            if (Input.GetKeyDown(KeyCode.UpArrow) && canUsePortal)
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
             }
-            if (Input.GetKeyDown(KeyCode.DownArrow))
-            {
-                StartCoroutine(CharacterDead());
-            }
 
-            rb.velocity = new Vector2(speed * moveSpeed, rb.velocity.y);
-            animator.SetFloat("movingSpeed", speed);
-            if (speed < 0)
+            rb.velocity = new Vector2(moveDirection * moveSpeed, rb.velocity.y);
+            animator.SetFloat("movingSpeed", moveDirection);
+            if (moveDirection < 0)
             {
                 spriteRenderer.flipX = true;
             }
-            else if (speed > 0)
+            else if (moveDirection > 0)
             {
                 spriteRenderer.flipX = false;
             }
 
-            if (Input.GetKeyDown(KeyCode.Space) && !isJumping)
+            if (collidingBoxRb != null)
+            {
+                collidingBoxRb.velocity = rb.velocity;
+            }
+            if ((Input.GetKeyDown(KeyCode.Space) && !isJumping) && !isHoldingBox)
             {
                 rb.AddForce(new Vector2(0, jumpSpeed), ForceMode2D.Impulse);
                 isJumping = true;
@@ -85,12 +101,76 @@ public class CharacterMove : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
+    private void UnlinkToBox()
+    {
+        if (collidingBoxRb != null)
+        {
+            isHoldingBox = false;
+            collidingBoxRb.velocity = new Vector2(0, 0);
+            collidingBoxRb.isKinematic = false;
+            collidingBoxRb = null;
+            boxDirection = 0;
+
+            moveSpeed = 4.0f;
+        }
+    }
+    
+    private void RaycastBox() {
+        RaycastHit2D hit;
+        int direction = spriteRenderer.flipX ? -1 : 1;
+
+        hit = Physics2D.Raycast(transform.position, new Vector2(direction, 0), 1f, 1 << LayerMask.NameToLayer("Box"));
+        
+        if (hit.collider != null)
+        {
+            collidingBoxRb = hit.collider.gameObject.GetComponent<Rigidbody2D>();
+            collidingBoxRb.isKinematic = true;
+            isHoldingBox = true;
+            boxDirection = direction;
+
+            moveSpeed = 2f;
+        }
+    }
+
+
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if(isJumping && collision.gameObject.CompareTag("Map"))
         {
             isJumping = false;
             animator.SetBool("isJumping", isJumping);
+        }
+        if(collision.gameObject.CompareTag("Box"))
+        {
+            if (transform.position.y >= collision.gameObject.transform.position.y + 0.2f) //박스 위를 밟는 경우
+            {
+                isJumping = false;
+                animator.SetBool("isJumping", isJumping);
+            }
+            else
+            {
+                collidingBoxRb = collision.gameObject.GetComponent<Rigidbody2D>();
+                collidingBoxRb.isKinematic = true;
+                boxDirection = spriteRenderer.flipX ? -1 : 1;
+
+                moveSpeed = 2f;
+            }
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (!isHoldingBox && collision.gameObject.CompareTag("Box"))
+        {
+            UnlinkToBox();
+        }
+        if (collision.gameObject.CompareTag("Map"))
+        {
+            if (isHoldingBox)
+            {
+                UnlinkToBox();
+            }
         }
     }
 
