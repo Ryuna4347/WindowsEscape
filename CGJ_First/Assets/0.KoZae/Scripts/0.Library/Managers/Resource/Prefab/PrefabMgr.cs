@@ -5,7 +5,9 @@ namespace KZLib
 {
     public class PrefabMgr : Singleton<PrefabMgr>
     {
-        private readonly DictObject<GameObject> prefabs = new DictObject<GameObject>();
+        private readonly DictObject<GameObject> prefabs;
+
+        public int StageCount { get; private set; }
 
         PrefabMgr()
         {
@@ -13,7 +15,12 @@ namespace KZLib
 
             try
             {
-                prefabs.AddRange(Resources.LoadAll<GameObject>("Prefabs"));
+                var datas = Resources.LoadAll<GameObject>("Prefabs/Stages");
+
+                StageCount = datas.Length;
+
+                prefabs = new DictObject<GameObject>(datas);
+                prefabs.AddRange(Resources.LoadAll<GameObject>("Prefabs/Else"));
 
                 text = "데이터 로드 성공!!!";
             }
@@ -23,7 +30,7 @@ namespace KZLib
             }
             finally
             {
-                Debug.Log(text);
+                Log.Prefab.I(text);
             }
         }
 

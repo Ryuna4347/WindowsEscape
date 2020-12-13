@@ -9,8 +9,8 @@ public static class Constant
     }
 
     public class Data
-    { 
-
+    {
+        public const int MAX_STAGE_COUNT = 30;
     }
 }
 

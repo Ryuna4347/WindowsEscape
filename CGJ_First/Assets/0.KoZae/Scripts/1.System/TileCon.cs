@@ -21,8 +21,9 @@ namespace KZLib
             if (stage != -1)
             {
                 isTest = false;
-                // 불러올 스테이지 받아오기
-                stage = 1;
+
+                // 스테이지 받아오기
+                stage = PlayerMgr.In.Progress.GetNowStage();
 
                 map = Instantiate(PrefabMgr.In.FindPrefab($"Stage_{stage}"),transform).transform;
             }
