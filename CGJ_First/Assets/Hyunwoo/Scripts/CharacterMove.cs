@@ -47,14 +47,9 @@ public class CharacterMove : MonoBehaviour
             {
                 RaycastBox();
             }
-            if(isHoldingBox && (Input.GetKeyUp(KeyCode.LeftShift) || moveDirection == boxDirection))
+            if(Input.GetKeyUp(KeyCode.LeftShift) || moveDirection == boxDirection)
             {
                 UnlinkToBox();
-            }
-
-            if(collidingBoxRb != null)
-            {
-                collidingBoxRb.velocity = rb.velocity;
             }
 
             if (Input.GetKeyDown(KeyCode.UpArrow) && canUsePortal)
@@ -73,7 +68,11 @@ public class CharacterMove : MonoBehaviour
                 spriteRenderer.flipX = false;
             }
 
-            if (Input.GetKeyDown(KeyCode.Space) && !isJumping)
+            if (collidingBoxRb != null)
+            {
+                collidingBoxRb.velocity = rb.velocity;
+            }
+            if ((Input.GetKeyDown(KeyCode.Space) && !isJumping) && !isHoldingBox)
             {
                 rb.AddForce(new Vector2(0, jumpSpeed), ForceMode2D.Impulse);
                 isJumping = true;
@@ -104,13 +103,18 @@ public class CharacterMove : MonoBehaviour
 
     private void UnlinkToBox()
     {
-        isHoldingBox = false;
-        collidingBoxRb.velocity = new Vector2(0, 0);
-        collidingBoxRb.isKinematic = false;
-        collidingBoxRb = null;
-        boxDirection = 0;
-    }
+        if (collidingBoxRb != null)
+        {
+            isHoldingBox = false;
+            collidingBoxRb.velocity = new Vector2(0, 0);
+            collidingBoxRb.isKinematic = false;
+            collidingBoxRb = null;
+            boxDirection = 0;
 
+            moveSpeed = 4.0f;
+        }
+    }
+    
     private void RaycastBox() {
         RaycastHit2D hit;
         int direction = spriteRenderer.flipX ? -1 : 1;
@@ -123,6 +127,8 @@ public class CharacterMove : MonoBehaviour
             collidingBoxRb.isKinematic = true;
             isHoldingBox = true;
             boxDirection = direction;
+
+            moveSpeed = 2f;
         }
     }
 
@@ -137,9 +143,19 @@ public class CharacterMove : MonoBehaviour
         }
         if(collision.gameObject.CompareTag("Box"))
         {
-            collidingBoxRb = collision.gameObject.GetComponent<Rigidbody2D>();
-            collidingBoxRb.isKinematic = true;
-            boxDirection = spriteRenderer.flipX ? -1 : 1;
+            if (transform.position.y >= collision.gameObject.transform.position.y + 0.2f) //박스 위를 밟는 경우
+            {
+                isJumping = false;
+                animator.SetBool("isJumping", isJumping);
+            }
+            else
+            {
+                collidingBoxRb = collision.gameObject.GetComponent<Rigidbody2D>();
+                collidingBoxRb.isKinematic = true;
+                boxDirection = spriteRenderer.flipX ? -1 : 1;
+
+                moveSpeed = 2f;
+            }
         }
     }
 
@@ -148,6 +164,13 @@ public class CharacterMove : MonoBehaviour
         if (!isHoldingBox && collision.gameObject.CompareTag("Box"))
         {
             UnlinkToBox();
+        }
+        if (collision.gameObject.CompareTag("Map"))
+        {
+            if (isHoldingBox)
+            {
+                UnlinkToBox();
+            }
         }
     }
 
