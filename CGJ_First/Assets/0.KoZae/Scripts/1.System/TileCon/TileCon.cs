@@ -55,11 +55,6 @@ namespace KZLib
             }
         }
 
-        void Start()
-        {
-            
-        }
-
         void Update()
         {
             if(Input.GetKeyDown(KeyCode.A))
