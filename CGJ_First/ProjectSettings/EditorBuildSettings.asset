@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Hyunwoo/Scenes/Test.unity
+    guid: f36dc6841685a3649988a341e7b68893
+  - enabled: 1
+    path: Assets/Hyunwoo/Scenes/Test 1.unity
+    guid: 7f93dc416a355084a8ef65c20f6b68c0
   m_configObjects: {}
