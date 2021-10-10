@@ -10,15 +10,14 @@ public static class Constant
 
     public class Data
     {
-        public const int MAX_STAGE_COUNT = 30;
+        public const int MAX_STAGE_COUNT = 10;
     }
 }
 
 [Flags]
 public enum LayerKind
 {
-    Red_Layer,
-    Green_Layer,
-    Blue_Layer,
-    Yellow_Layer,   // ??
+    Magenta_Layer,
+    Cyan_Layer,
+    Yellow_Layer,
 }

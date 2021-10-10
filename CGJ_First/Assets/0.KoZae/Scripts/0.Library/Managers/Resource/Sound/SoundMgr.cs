@@ -12,10 +12,7 @@ namespace KZLib
         [SerializeField] private AudioSource bgm = null;
         [SerializeField] private Transform sfxBox = null;
 
-        public AudioMixer mixer;
-
         private readonly List<AudioSource> sfxs = new List<AudioSource>();
-
         private readonly DictObject<AudioClip> sounds = new DictObject<AudioClip>();
 
         protected override void DoAwake()
@@ -23,6 +20,38 @@ namespace KZLib
             var clips = Resources.LoadAll<AudioClip>("Sounds");
 
             sounds.AddRange(clips);
+
+            if(bgm == null)
+            {
+                var music = transform.Find("SoundMusic");
+
+                if(music == null)
+                {
+                    music = new GameObject("SoundMusic").transform;
+                    music.parent = transform;
+                }
+
+                bgm = music.GetComponent<AudioSource>();
+
+                if(bgm == null)
+                {
+                    bgm = music.gameObject.AddComponent<AudioSource>();
+                }
+
+                bgm.playOnAwake = false;
+                bgm.loop = true;
+            }
+            
+            if(sfxBox == null)
+            {
+                sfxBox = transform.Find("SoundEffectGroup");
+
+                if (sfxBox == null)
+                {
+                    sfxBox = new GameObject("SoundEffectGroup").transform;
+                    sfxBox.parent = transform;
+                }
+            }
         }
 
         #region BGM Part
@@ -277,5 +306,10 @@ namespace KZLib
             }
         }
         #endregion
+
+        public void SetBGMVolume(float _volume)
+        {
+            bgm.volume = _volume;
+        }
     }
 }

@@ -4,15 +4,57 @@ using UnityEngine;
 
 public class Box : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    [SerializeField] private Animator animator;
+    [SerializeField] private bool isPlayerNear = false;
+    private Rigidbody2D rb;
+    public bool isPlayerGrabbing = false;
+
+    private void Awake()
     {
-        
+        rb = GetComponent<Rigidbody2D>();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnEnable()
     {
-        
+        StartCoroutine(UpdatePlayer());
+    }
+
+    private void OnDisable()
+    {
+        if (GetComponent<FixedJoint2D>().connectedBody != null)
+        {
+            GetComponent<FixedJoint2D>().connectedBody.GetComponent<CharacterMove>().UnregisterBox();
+        }
+    }
+
+    private IEnumerator UpdatePlayer()
+    {
+        while (gameObject.activeSelf == true)
+        {
+            if (!isPlayerGrabbing && Physics2D.OverlapCircle(transform.position, 3, 1 << LayerMask.NameToLayer("Player")) != null)
+            {
+                rb.mass = 1000f;
+            }
+            else
+            {
+                rb.mass = 2f;
+            }
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Map"))
+        {
+            //먼지 애니메이션
+        }
+        if (collision.gameObject.CompareTag("Spring"))
+        {
+            if (!isPlayerGrabbing)
+            {
+                KZLib.SoundMgr.In.PlaySFX("Spring", 1, 0.75f);
+            }
+        }
     }
 }

@@ -1,46 +1,58 @@
-﻿using System.Collections;
+﻿using Newtonsoft.Json;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace KZLib.Data.Player
 {
-    public class Progress : PLHandler<Progress.DataBase>
-    {
-        public class DataBase : PLDataBase
-        {
-            public int NowStage { get; private set; }
+    //public class Progress : PLHandler<Progress.DataBase>
+    //{
+    //    public class DataBase : PLDataBase
+    //    {
+            
 
-            public List<string> Stages { get; private set; }
+            
 
-            public override void Init()
-            {
-                if(Stages == null)
-                {
-                    Stages = new List<string>();
-                }
-            }
+    //        public override void Init()
+    //        {
+    //            if(Stages == null)
+    //            {
+    //                Stages = new List<string>();
+    //            }
 
-            public void SetStage(int _stage)
-            {
-                NowStage = _stage;
-            }
-        }
+    //            NowStageName = null;
+    //            PlayFade = -1;
+    //            StartSFX = false;
+    //        }
+    //    }
 
-        public void StageClear(string _stageName)
-        {
-            if (!IsClear(_stageName))
-            {
-                DB.Stages.Add(_stageName);
-            }
-        }
+    //    public void StageClear(string _stageName)
+    //    {
+    //        if (!IsClear(_stageName))
+    //        {
+    //            DB.Stages.Add(_stageName);
+    //        }
+    //    }
 
-        public bool IsClear(string _stageName)
-        {
-            return DB.Stages.Any(any=>any.Equals(_stageName));
-        }
+    //    public bool IsClear(string _stageName)
+    //    {
+    //        return DB.Stages.Any(any=>any.Equals(_stageName));
+    //    }
 
-        public void SetNowStage(int _stage) => DB.SetStage(_stage);
-        public int GetNowStage() => DB.NowStage;
-    }
+    //    public void SetNowStageName(string _name) => DB.NowStageName = _name;
+
+    //    public string GetNowStageName() => DB.NowStageName;
+
+    //    public void SetShowIntro() => DB.ShowIntro = true;
+
+    //    public bool GetShowIntro() => DB.ShowIntro;
+
+    //    public void SetPlayFade(int _fade) => DB.PlayFade = _fade;
+
+    //    public int IsPlayFade() => DB.PlayFade;
+
+    //    public void SetSFX(bool _sfx) => DB.StartSFX = _sfx;
+
+    //    public bool IsSFX() => DB.StartSFX;
+    //}
 }

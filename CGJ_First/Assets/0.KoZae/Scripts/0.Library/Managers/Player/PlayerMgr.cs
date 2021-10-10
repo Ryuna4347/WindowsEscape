@@ -3,88 +3,51 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace KZLib
 {
     public class PlayerMgr : Singleton<PlayerMgr>
     {
-        private static readonly string[] DATA_KIND = { "Progress","Option" };
+        //private static readonly string[] DATA_KIND = { "Progress" };
         private const string FILE_NAME = "PlayerData.json";
 
-        private readonly DictValue<IPLHandler> handlers = new DictValue<IPLHandler>();
+        //private readonly DictValue<IPLHandler> handlers = new DictValue<IPLHandler>();
 
-        public Progress Progress => handlers["Progress"] as Progress;
+
+        public ProgressData Progress { get; set; }
+
+        //public Progress Progress => handlers["Progress"] as Progress;
 
         PlayerMgr()
         {
-            var text = FileUtil.ReadDataFromFile(FILE_NAME);
+            Progress = new ProgressData();
 
-            if (text.IsOk())
+
+            if( PlayerPrefs.HasKey("ShowIntro"))
             {
-                try
-                {
-                    var datas = JObject.Parse(text);
-
-                    ImportData(datas);
-
-                    Log.Player.I("데이터 로드 성공!!!");
-                }
-                catch (JsonException _jex)
-                {
-                    Log.Player.W($"하지만 제이슨 에러 ㅎㅎ \n{_jex}");
-
-                    InitData();
-                }
+                Progress.ShowIntro = PlayerPrefs.GetInt("ShowIntro") == 1;
             }
-            else
+
+            if (PlayerPrefs.HasKey("Stages"))
             {
-                InitData();
+                Progress.Stages.AddRange(PlayerPrefs.GetString("Stages").Split('&'));
             }
         }
 
         void InitData()
         {
-            var datas = new JObject();
-
-            foreach (var kind in DATA_KIND)
-            {
-                datas.Add(kind,null);
-            }
-
-            ImportData(datas);            
+            ImportData();            
         }
 
-        void ImportData(JObject _object)
+        void ImportData(JObject _object = null)
         {
-            handlers.Clear();
+            Progress = new ProgressData();
 
-            foreach (var kind in DATA_KIND)
+            if (_object != null && _object.TryGetValue("Progress",out var token) && token.Type.Equals(JTokenType.Null))
             {
-                var type = Type.GetType(string.Format("Player.{0}",kind));
-                var nested = type.GetNestedType("DataBase");
-
-                if (type != null && nested != null)
-                {
-                    var handler = (IPLHandler)Activator.CreateInstance(type);
-
-                    if (_object.TryGetValue(kind,out var token))
-                    {
-                        handler.SetDataBase(token.Type.Equals(JTokenType.Null) ? Activator.CreateInstance(nested) : token.ToObject(nested));
-                    }
-                    else
-                    {
-                        handler.SetDataBase(Activator.CreateInstance(nested));
-                    }
-
-                    handler.InitDataBase();
-                    handlers.Add(kind,handler);
-                }
-                else
-                {
-#if UNITY_EDITOR
-                    UnityEditor.EditorApplication.isPlaying = false;
-#endif
-                }
+                Progress = token.ToObject<ProgressData>();
             }
 
             SaveData();
@@ -92,16 +55,39 @@ namespace KZLib
 
         public void SaveData()
         {
-            var datas = new JObject();
+            PlayerPrefs.SetInt("ShowIntro",Progress.ShowIntro ? 1 : 0);
+            PlayerPrefs.SetString("Stages",string.Join("&",Progress.Stages));
+        }
 
-            foreach (var handler in handlers)
+
+        public class ProgressData
+        {
+            [JsonIgnore] public string NowStageName { get; set; }
+            [JsonIgnore] public bool StartSFX { get; set; }
+            [JsonIgnore] public int PlayFade { get; set; }
+            public bool ShowIntro { get; set; }
+            public List<string> Stages { get; set; }
+
+            public ProgressData()
             {
-                datas.Add(handler.Key,handler.Value.ParseDataBase());
+                Stages = new List<string>();
+                NowStageName = null;
+                PlayFade = -1;
+                StartSFX = false;
             }
 
-            var text = datas.ToString();
+            public void StageClear(string _stageName)
+            {
+                if (!IsClear(_stageName))
+                {
+                    Stages.Add(_stageName);
+                }
+            }
 
-            FileUtil.WriteDataToFile(text,FILE_NAME);
+            public bool IsClear(string _stageName)
+            {
+                return Stages.Any(any => any.Equals(_stageName));
+            }
         }
     }
 }

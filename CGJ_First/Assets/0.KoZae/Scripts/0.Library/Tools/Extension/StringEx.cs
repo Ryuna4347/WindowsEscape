@@ -68,4 +68,9 @@ public static class StringEx
 	{
 		return Enum.IsDefined(typeof(T),_text);
 	}
+
+	public static Color ToColor(this string _hex)
+	{
+		return ColorUtility.TryParseHtmlString(_hex,out var color) ? color : Color.white;
+	}
 }

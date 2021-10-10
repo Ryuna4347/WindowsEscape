@@ -7,6 +7,7 @@ public enum Log
 	Player,
 	Prefab,
 
+	Map,
 	System,
 }
 
